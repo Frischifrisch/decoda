@@ -13,7 +13,7 @@ def decodeFunction(featureVal):
 	nameIdent, params = string.split(rest, "(")
 	name, value = string.split(nameIdent, "=")
 	params, rest = string.split(params, ")")
-	param1, param2 = string.split(params, ",")[0:2]
+	param1, param2 = string.split(params, ",")[:2]
 	return retType, name, value, param1, param2
 	
 def decodeEvent(featureVal):
@@ -48,9 +48,8 @@ class Face:
 		currentComment = []
 		currentCommentFinished = 0
 		file = open(name)
-		for line in file.readlines():
-			line = sanitiseLine(line)
-			if line:
+		for line in file:
+			if line := sanitiseLine(line):
 				if line[0] == "#":
 					if line[1] == " ":
 						if currentCommentFinished:
@@ -73,7 +72,7 @@ class Face:
 							"Category": currentCategory, "Comment": currentComment
 						}
 						if self.values.has_key(value):
-							raise "Duplicate value " + value + " " + name
+							raise f"Duplicate value {value} {name}"
 						self.values[value] = 1
 						self.order.append(name)
 					elif featureType == "evt":
@@ -85,19 +84,12 @@ class Face:
 							"Category": currentCategory, "Comment": currentComment
 						}
 						if self.events.has_key(value):
-							raise "Duplicate event " + value + " " + name
+							raise f"Duplicate event {value} {name}"
 						self.events[value] = 1
 						self.order.append(name)
 					elif featureType == "cat":
 						currentCategory = featureVal
-					elif featureType == "val":
-						name, value = string.split(featureVal, "=", 1)
-						self.features[name] = { 
-							"FeatureType": featureType, 
-							"Category": currentCategory, 
-							"Value": value }
-						self.order.append(name)
-					elif featureType == "enu" or featureType == "lex":
+					elif featureType in ["val", "enu", "lex"]:
 						name, value = string.split(featureVal, "=", 1)
 						self.features[name] = { 
 							"FeatureType": featureType, 
